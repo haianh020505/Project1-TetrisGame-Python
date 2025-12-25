@@ -41,8 +41,14 @@ class TetrisGame:
         # Create game state
         self.game_state = GameState()
         
-        # Track time for movement delay
-        self.last_move_time = 0.0
+        # DAS/ARR input system (Delayed Auto Shift / Auto Repeat Rate)
+        self.left_das_timer = 0.0      # Timer for left key DAS
+        self.right_das_timer = 0.0     # Timer for right key DAS
+        self.left_key_held = False     # Is left key currently held?
+        self.right_key_held = False    # Is right key currently held?
+        self.left_in_arr = False       # Is left in auto-repeat mode?
+        self.right_in_arr = False      # Is right in auto-repeat mode?
+        
         self.last_frame_time = pygame.time.get_ticks() / 1000.0
 
     def run(self):
@@ -66,6 +72,9 @@ class TetrisGame:
             # Handle events (keyboard input, window close, etc.)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    # Save high score before quitting (prevent data loss)
+                    if self.game_state.score > self.game_state.high_score:
+                        self.game_state.save_high_score(self.game_state.score)
                     running = False
                 
                 # Handle key presses (one-time actions)
@@ -84,6 +93,19 @@ class TetrisGame:
                         # Hold piece
                         elif event.key == pygame.K_c:
                             self.game_state.hold_piece()
+                        
+                        # Left/Right movement - immediate response on key press
+                        elif event.key == pygame.K_LEFT:
+                            self.game_state.move_left()
+                            self.left_key_held = True
+                            self.left_das_timer = 0.0
+                            self.left_in_arr = False
+                        
+                        elif event.key == pygame.K_RIGHT:
+                            self.game_state.move_right()
+                            self.right_key_held = True
+                            self.right_das_timer = 0.0
+                            self.right_in_arr = False
                     
                     # Restart (works even during game over)
                     if event.key == pygame.K_r:
@@ -91,20 +113,54 @@ class TetrisGame:
                     
                     # Quit
                     if event.key == pygame.K_ESCAPE:
+                        # Save high score before quitting (prevent data loss)
+                        if self.game_state.score > self.game_state.high_score:
+                            self.game_state.save_high_score(self.game_state.score)
                         running = False
+                
+                # Handle key releases (reset DAS/ARR timers)
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT:
+                        self.left_key_held = False
+                        self.left_das_timer = 0.0
+                        self.left_in_arr = False
+                    
+                    elif event.key == pygame.K_RIGHT:
+                        self.right_key_held = False
+                        self.right_das_timer = 0.0
+                        self.right_in_arr = False
             
-            # Handle continuous movement (holding keys down)
+            # Handle continuous movement (DAS/ARR system for held keys)
             if not self.game_state.game_over and self.game_state.state == GameState.STATE_PLAYING:
                 keys = pygame.key.get_pressed()
                 
-                # Left/right movement with delay (prevents too-fast movement)
-                if keys[pygame.K_LEFT] and current_time - self.last_move_time > MOVE_DELAY:
-                    self.game_state.move_left()
-                    self.last_move_time = current_time
+                # Left movement with DAS/ARR
+                if self.left_key_held and keys[pygame.K_LEFT]:
+                    self.left_das_timer += delta_time
+                    
+                    # Check if we've passed DAS delay (start auto-repeat)
+                    if not self.left_in_arr and self.left_das_timer >= DAS_DELAY:
+                        self.left_in_arr = True
+                        self.left_das_timer = 0.0
+                    
+                    # If in auto-repeat mode, move at ARR speed
+                    if self.left_in_arr and self.left_das_timer >= ARR_DELAY:
+                        self.game_state.move_left()
+                        self.left_das_timer = 0.0
                 
-                if keys[pygame.K_RIGHT] and current_time - self.last_move_time > MOVE_DELAY:
-                    self.game_state.move_right()
-                    self.last_move_time = current_time
+                # Right movement with DAS/ARR
+                if self.right_key_held and keys[pygame.K_RIGHT]:
+                    self.right_das_timer += delta_time
+                    
+                    # Check if we've passed DAS delay (start auto-repeat)
+                    if not self.right_in_arr and self.right_das_timer >= DAS_DELAY:
+                        self.right_in_arr = True
+                        self.right_das_timer = 0.0
+                    
+                    # If in auto-repeat mode, move at ARR speed
+                    if self.right_in_arr and self.right_das_timer >= ARR_DELAY:
+                        self.game_state.move_right()
+                        self.right_das_timer = 0.0
                 
                 # Check if soft drop is active
                 soft_drop = keys[pygame.K_DOWN]

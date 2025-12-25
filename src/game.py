@@ -13,6 +13,7 @@ This file contains the main game logic including:
 import pygame
 import os
 from config import *
+from config import get_gravity_speed
 from tetromino import Tetromino, BagRandomizer
 
 
@@ -54,6 +55,7 @@ class GameState:
         self.high_score = self.load_high_score()
         self.level = 1
         self.lines_cleared = 0
+        self.combo_count = -1  # Combo counter: -1 means no active combo
         
         # Game state
         self.game_over = False
@@ -63,6 +65,10 @@ class GameState:
         self.fall_timer = 0.0          # Timer for automatic piece falling
         self.lock_timer = 0.0          # Timer before piece locks at bottom
         self.is_on_ground = False      # Is current piece touching ground?
+        
+        # Lock delay reset limit (prevent infinity spin exploit)
+        self.lock_reset_count = 0      # Count how many times lock delay was reset
+        self.max_lock_resets = 15      # Maximum resets before force-lock
         
         # Line clear animation
         self.line_clear_timer = 0.0
@@ -95,7 +101,8 @@ class GameState:
         if soft_drop:
             fall_speed = FAST_DROP_SPEED
         else:
-            fall_speed = INITIAL_FALL_SPEED / self.level
+            # Use standard Tetris gravity curve
+            fall_speed = get_gravity_speed(self.level)
         
         self.fall_timer += delta_time
 
@@ -106,24 +113,30 @@ class GameState:
         # If on ground, start lock timer
         if self.is_on_ground:
             self.lock_timer += delta_time
-            # Lock piece after delay
-            if self.lock_timer >= LOCK_DELAY:
+            # Lock piece after delay OR if max resets reached
+            if self.lock_timer >= LOCK_DELAY or self.lock_reset_count >= self.max_lock_resets:
                 self.lock_piece()
         else:
             self.lock_timer = 0.0
+            self.lock_reset_count = 0  # Reset counter when piece is airborne
 
         # Make piece fall automatically
         if self.fall_timer >= fall_speed:
             self.fall_timer = 0.0
             if not self.is_on_ground:
                 self.current_piece.y += 1
+                # Reset lock reset counter when piece moves down naturally
+                self.lock_reset_count = 0
                 # Award points for soft drop
                 if soft_drop:
                     self.score += SCORE_SOFT_DROP
 
-        # Reset lock timer if piece moved off ground
+        # Reset lock timer if piece moved off ground (but limit resets to prevent infinity spin)
         if was_on_ground and not self.is_on_ground:
-            self.lock_timer = 0.0
+            if self.lock_reset_count < self.max_lock_resets:
+                self.lock_timer = 0.0
+                self.lock_reset_count += 1
+            # If max resets reached, don't reset timer (piece will lock soon)
 
     def move_left(self):
         """Try to move the current piece left"""
@@ -319,13 +332,18 @@ class GameState:
         # Check for completed lines
         self.check_line_clears()
         
+        # Reset combo if no lines were cleared
+        if not self.lines_being_cleared:
+            self.combo_count = -1
+        
         # Spawn next piece
         self.spawn_next_piece()
         
-        # Reset hold ability
+        # Reset hold ability and lock reset counter
         self.can_hold = True
         self.lock_timer = 0.0
         self.is_on_ground = False
+        self.lock_reset_count = 0  # Reset counter for new piece
 
     def spawn_next_piece(self):
         """
@@ -395,15 +413,22 @@ class GameState:
         base_score = score_table.get(num_lines, 0)
         self.score += base_score * self.level
 
+        # Increment combo counter and add combo bonus
+        self.combo_count += 1
+        if self.combo_count > 0:
+            combo_bonus = COMBO_BONUS * self.combo_count * self.level
+            self.score += combo_bonus
+
         # Update lines cleared counter
         self.lines_cleared += num_lines
 
         # Update level (every 10 lines increases level)
         self.level = (self.lines_cleared // 10) + 1
 
-        # Update high score
+        # Update and save high score immediately (prevent data loss on quit)
         if self.score > self.high_score:
             self.high_score = self.score
+            self.save_high_score(self.high_score)
 
     def reset(self):
         """Reset the game to initial state (restart)"""

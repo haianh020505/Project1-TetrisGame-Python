@@ -30,8 +30,11 @@ UI_OFFSET_Y = 50
 INITIAL_FALL_SPEED = 1.0      # How many seconds before piece falls one row
 FAST_DROP_SPEED = 0.05        # Speed when holding down arrow
 LOCK_DELAY = 0.5              # Time piece stays at bottom before locking
-LINE_CLEAR_ANIMATION = 0.3    # Duration of line clear animation
-MOVE_DELAY = 0.15             # Delay between repeated left/right moves
+LINE_CLEAR_ANIMATION = 0.2    # Duration of line clear animation
+
+# Input timing (DAS/ARR system for responsive controls)
+DAS_DELAY = 0.15              # Delayed Auto Shift: initial delay before auto-repeat (seconds)
+ARR_DELAY = 0.033             # Auto Repeat Rate: delay between repeated moves (seconds, ~30 moves/sec)
 
 # Scoring system (points awarded for clearing lines)
 SCORE_SINGLE = 100    # Clear 1 line
@@ -60,4 +63,40 @@ COLOR_WHITE = (255, 255, 255)  # White for outlines
 
 # File to save high score
 HIGHSCORE_FILE = "highscore.txt"
+
+# Gravity speed table (standard Tetris guideline curve)
+# Maps level -> fall speed in seconds
+GRAVITY_SPEED_TABLE = {
+    1: 1.0,
+    2: 0.79,
+    3: 0.61,
+    4: 0.47,
+    5: 0.36,
+    6: 0.28,
+    7: 0.21,
+}
+
+# Combo scoring
+COMBO_BONUS = 50  # Base bonus per combo level
+
+def get_gravity_speed(level):
+    """
+    Get the fall speed for a given level.
+    
+    Uses the standard Tetris gravity curve where speed increases
+    exponentially with level. Caps at 0.1s for level 8+.
+    
+    Args:
+        level: The current game level
+        
+    Returns:
+        Fall speed in seconds (time between automatic drops)
+    """
+    if level in GRAVITY_SPEED_TABLE:
+        return GRAVITY_SPEED_TABLE[level]
+    elif level >= 8:
+        return 0.1  # Cap at very fast for level 8+
+    else:
+        # Shouldn't happen, but fallback to level 1 speed
+        return 1.0
 
