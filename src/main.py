@@ -1,12 +1,12 @@
 """
-Tetris Game - Main Entry Point
+Tetris Game - Điểm Khởi Đầu Chính
 
-This is the main file that runs the Tetris game.
+Đây là file chính chạy game Tetris.
 
-It contains:
-- Game loop (update and draw)
-- Input handling
-- Rendering all visual elements
+Bao gồm:
+- Vòng lặp game (cập nhật và vẽ)
+- Xử lý đầu vào
+- Render tất cả các phần tử hình ảnh
 """
 
 import pygame
@@ -18,83 +18,83 @@ from tetromino import TetrominoType
 
 class TetrisGame:
     """
-    Main game class that handles the game loop and rendering.
+    Class game chính xử lý vòng lặp game và rendering.
     """
     
     def __init__(self):
-        """Initialize pygame and create the game window"""
+        """Khởi tạo pygame và tạo cửa sổ game"""
         pygame.init()
         
-        # Create the game window
+        # Tạo cửa sổ game
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Tetris")
         
-        # Create clock for controlling frame rate
+        # Tạo đồng hồ để kiểm soát tốc độ khung hình
         self.clock = pygame.time.Clock()
         
-        # Create fonts for text rendering
+        # Tạo font cho render văn bản
         self.font_large = pygame.font.Font(None, 48)
         self.font_medium = pygame.font.Font(None, 32)
         self.font_small = pygame.font.Font(None, 24)
         self.font_tiny = pygame.font.Font(None, 20)
         
-        # Create game state
+        # Tạo trạng thái game
         self.game_state = GameState()
         
-        # DAS/ARR input system (Delayed Auto Shift / Auto Repeat Rate)
-        self.left_das_timer = 0.0      # Timer for left key DAS
-        self.right_das_timer = 0.0     # Timer for right key DAS
-        self.left_key_held = False     # Is left key currently held?
-        self.right_key_held = False    # Is right key currently held?
-        self.left_in_arr = False       # Is left in auto-repeat mode?
-        self.right_in_arr = False      # Is right in auto-repeat mode?
+        # Hệ thống đầu vào DAS/ARR (Delayed Auto Shift / Auto Repeat Rate)
+        self.left_das_timer = 0.0      # Bộ đếm DAS cho phím trái
+        self.right_das_timer = 0.0     # Bộ đếm DAS cho phím phải
+        self.left_key_held = False     # Phím trái có đang được giữ không?
+        self.right_key_held = False    # Phím phải có đang được giữ không?
+        self.left_in_arr = False       # Phím trái có ở chế độ lặp lại tự động không?
+        self.right_in_arr = False      # Phím phải có ở chế độ lặp lại tự động không?
         
         self.last_frame_time = pygame.time.get_ticks() / 1000.0
 
     def run(self):
         """
-        Main game loop.
+        Vòng lặp game chính.
         
-        This loop:
-        1. Handles input from player
-        2. Updates game state
-        3. Draws everything on screen
-        4. Repeats 60 times per second
+        Vòng lặp này:
+        1. Xử lý đầu vào từ người chơi
+        2. Cập nhật trạng thái game
+        3. Vẽ mọi thứ lên màn hình
+        4. Lặp lại 60 lần mỗi giây
         """
         running = True
         
         while running:
-            # Calculate time since last frame (delta time)
+            # Tính thời gian từ khung hình cuối (delta time)
             current_time = pygame.time.get_ticks() / 1000.0
             delta_time = current_time - self.last_frame_time
             self.last_frame_time = current_time
             
-            # Handle events (keyboard input, window close, etc.)
+            # Xử lý sự kiện (đầu vào bàn phím, đóng cửa sổ, v.v.)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    # Save high score before quitting (prevent data loss)
+                    # Lưu điểm cao trước khi thoát (ngăn mất dữ liệu)
                     if self.game_state.score > self.game_state.high_score:
                         self.game_state.save_high_score(self.game_state.score)
                     running = False
                 
-                # Handle key presses (one-time actions)
+                # Xử lý phím nhấn (hành động một lần)
                 if event.type == pygame.KEYDOWN:
                     if not self.game_state.game_over and self.game_state.state == GameState.STATE_PLAYING:
-                        # Rotation
+                        # Xoay
                         if event.key == pygame.K_UP or event.key == pygame.K_x:
                             self.game_state.rotate_clockwise()
                         elif event.key == pygame.K_z:
                             self.game_state.rotate_counterclockwise()
                         
-                        # Hard drop
+                        # Rơi nhanh
                         elif event.key == pygame.K_SPACE:
                             self.game_state.hard_drop()
                         
-                        # Hold piece
+                        # Giữ mảnh
                         elif event.key == pygame.K_c:
                             self.game_state.hold_piece()
                         
-                        # Left/Right movement - immediate response on key press
+                        # Di chuyển Trái/Phải - phản hồi ngay lập tức khi nhấn phím
                         elif event.key == pygame.K_LEFT:
                             self.game_state.move_left()
                             self.left_key_held = True
@@ -107,18 +107,18 @@ class TetrisGame:
                             self.right_das_timer = 0.0
                             self.right_in_arr = False
                     
-                    # Restart (works even during game over)
+                    # Khởi động lại (hoạt động ngay cả khi game over)
                     if event.key == pygame.K_r:
                         self.game_state.reset()
                     
-                    # Quit
+                    # Thoát
                     if event.key == pygame.K_ESCAPE:
-                        # Save high score before quitting (prevent data loss)
+                        # Lưu điểm cao trước khi thoát (ngăn mất dữ liệu)
                         if self.game_state.score > self.game_state.high_score:
                             self.game_state.save_high_score(self.game_state.score)
                         running = False
                 
-                # Handle key releases (reset DAS/ARR timers)
+                # Xử lý phím thả (reset bộ đếm DAS/ARR)
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         self.left_key_held = False
@@ -130,51 +130,51 @@ class TetrisGame:
                         self.right_das_timer = 0.0
                         self.right_in_arr = False
             
-            # Handle continuous movement (DAS/ARR system for held keys)
+            # Xử lý di chuyển liên tục (hệ thống DAS/ARR cho phím được giữ)
             if not self.game_state.game_over and self.game_state.state == GameState.STATE_PLAYING:
                 keys = pygame.key.get_pressed()
                 
-                # Left movement with DAS/ARR
+                # Di chuyển trái với DAS/ARR
                 if self.left_key_held and keys[pygame.K_LEFT]:
                     self.left_das_timer += delta_time
                     
-                    # Check if we've passed DAS delay (start auto-repeat)
+                    # Kiểm tra xem đã qua độ trễ DAS chưa (bắt đầu lặp lại tự động)
                     if not self.left_in_arr and self.left_das_timer >= DAS_DELAY:
                         self.left_in_arr = True
                         self.left_das_timer = 0.0
                     
-                    # If in auto-repeat mode, move at ARR speed
+                    # Nếu ở chế độ lặp lại tự động, di chuyển với tốc độ ARR
                     if self.left_in_arr and self.left_das_timer >= ARR_DELAY:
                         self.game_state.move_left()
                         self.left_das_timer = 0.0
                 
-                # Right movement with DAS/ARR
+                # Di chuyển phải với DAS/ARR
                 if self.right_key_held and keys[pygame.K_RIGHT]:
                     self.right_das_timer += delta_time
                     
-                    # Check if we've passed DAS delay (start auto-repeat)
+                    # Kiểm tra xem đã qua độ trễ DAS chưa (bắt đầu lặp lại tự động)
                     if not self.right_in_arr and self.right_das_timer >= DAS_DELAY:
                         self.right_in_arr = True
                         self.right_das_timer = 0.0
                     
-                    # If in auto-repeat mode, move at ARR speed
+                    # Nếu ở chế độ lặp lại tự động, di chuyển với tốc độ ARR
                     if self.right_in_arr and self.right_das_timer >= ARR_DELAY:
                         self.game_state.move_right()
                         self.right_das_timer = 0.0
                 
-                # Check if soft drop is active
+                # Kiểm tra xem rơi chậm có đang hoạt động không
                 soft_drop = keys[pygame.K_DOWN]
                 
-                # Update game state
+                # Cập nhật trạng thái game
                 self.game_state.update(delta_time, soft_drop)
             else:
-                # During animation, just update without input
+                # Trong khi hoạt ảnh, chỉ cập nhật không có đầu vào
                 self.game_state.update(delta_time, False)
             
-            # Draw everything
+            # Vẽ mọi thứ
             self.draw()
             
-            # Update display and limit to 60 FPS
+            # Cập nhật màn hình và giới hạn ở 60 FPS
             pygame.display.flip()
             self.clock.tick(60)
         
@@ -182,40 +182,40 @@ class TetrisGame:
         sys.exit()
 
     def draw(self):
-        """Draw all game elements on screen"""
-        # Clear screen with background color
+        """Vẽ tất cả các phần tử game lên màn hình"""
+        # Xóa màn hình với màu nền
         self.screen.fill(COLOR_BACKGROUND)
         
-        # Draw game grid and pieces
+        # Vẽ lưới game và các mảnh
         self.draw_grid()
         self.draw_locked_pieces()
         self.draw_ghost_piece()
         self.draw_current_piece()
         
-        # Draw UI (score, next piece, etc.)
+        # Vẽ UI (điểm, mảnh tiếp theo, v.v.)
         self.draw_ui()
         
-        # Draw game over screen if needed
+        # Vẽ màn hình game over nếu cần
         if self.game_state.game_over:
             self.draw_game_over()
 
     def draw_grid(self):
         """
-        Draw the game grid (background lines).
+        Vẽ lưới game (các đường nền).
         
-        This shows the player where each block position is.
+        Điều này cho người chơi thấy vị trí của mỗi ô khối.
         """
-        # Draw grid cells
+        # Vẽ các ô lưới
         for y in range(GRID_HEIGHT):
             for x in range(GRID_WIDTH):
                 px = GRID_OFFSET_X + x * BLOCK_SIZE
                 py = GRID_OFFSET_Y + y * BLOCK_SIZE
                 
-                # Draw cell outline
+                # Vẽ viền ô
                 pygame.draw.rect(self.screen, COLOR_GRID, 
                                (px, py, BLOCK_SIZE, BLOCK_SIZE), 1)
         
-        # Draw border around grid
+        # Vẽ viền xung quanh lưới
         border_rect = pygame.Rect(
             GRID_OFFSET_X - 2,
             GRID_OFFSET_Y - 2,
@@ -226,9 +226,9 @@ class TetrisGame:
 
     def draw_locked_pieces(self):
         """
-        Draw all the locked pieces on the grid.
+        Vẽ tất cả các mảnh đã khóa trên lưới.
         
-        Includes line clear animation effects.
+        Bao gồm hiệu ứng hoạt ảnh xóa hàng.
         """
         for y in range(GRID_HEIGHT):
             for x in range(GRID_WIDTH):
@@ -238,27 +238,27 @@ class TetrisGame:
                     px = GRID_OFFSET_X + x * BLOCK_SIZE
                     py = GRID_OFFSET_Y + y * BLOCK_SIZE
                     
-                    # Check if this row is being cleared (animation)
+                    # Kiểm tra xem hàng này có đang được xóa không (hoạt ảnh)
                     if (self.game_state.state == GameState.STATE_LINE_CLEAR_ANIMATION and 
                         y in self.game_state.lines_being_cleared):
                         
-                        # Calculate animation progress (0.0 to 1.0)
+                        # Tính tiến trình hoạt ảnh (0.0 đến 1.0)
                         progress = self.game_state.line_clear_timer / LINE_CLEAR_ANIMATION
                         
-                        # Create fading and shrinking effect
+                        # Tạo hiệu ứng mờ dần và co lại
                         alpha = int(255 * (1.0 - progress))
                         shrink = progress * (BLOCK_SIZE - 2) * 0.5
                         size = (BLOCK_SIZE - 2) - (progress * (BLOCK_SIZE - 2))
                         
-                        # Create semi-transparent surface for animation
+                        # Tạo surface bán trong suốt cho hoạt ảnh
                         surf = pygame.Surface((int(size), int(size)))
                         surf.set_alpha(alpha)
                         surf.fill(color)
                         
-                        # Draw shrinking block
+                        # Vẽ khối co lại
                         self.screen.blit(surf, (px + 1 + shrink, py + 1 + shrink))
                         
-                        # Draw fading outline
+                        # Vẽ viền mờ dần
                         outline_surf = pygame.Surface((int(size + 2), int(size + 2)))
                         outline_surf.set_alpha(alpha)
                         outline_surf.fill(COLOR_BACKGROUND)
@@ -266,25 +266,25 @@ class TetrisGame:
                         pygame.draw.rect(outline_surf, COLOR_WHITE, outline_rect, 2)
                         self.screen.blit(outline_surf, (px + shrink, py + shrink))
                     else:
-                        # Normal rendering
-                        # Draw filled block
+                        # Rendering bình thường
+                        # Vẽ khối đầy
                         pygame.draw.rect(self.screen, color, 
                                        (px + 1, py + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2))
-                        # Draw white outline
+                        # Vẽ viền trắng
                         pygame.draw.rect(self.screen, COLOR_WHITE,
                                        (px, py, BLOCK_SIZE, BLOCK_SIZE), 2)
 
     def draw_ghost_piece(self):
         """
-        Draw the ghost piece (shadow showing where piece will land).
+        Vẽ mảnh ma (bóng cho thấy mảnh sẽ rơi ở đâu).
         
-        This helps players see where their piece will go.
+        Điều này giúp người chơi thấy mảnh của họ sẽ đi đâu.
         """
         ghost_y = self.game_state.calculate_ghost_y()
         blocks = self.game_state.current_piece.get_blocks()
         color = self.game_state.current_piece.get_color()
         
-        # Calculate vertical offset for ghost
+        # Tính offset dọc cho mảnh ma
         y_offset = ghost_y - self.game_state.current_piece.y
         
         for x, y in blocks:
@@ -293,53 +293,53 @@ class TetrisGame:
                 px = GRID_OFFSET_X + x * BLOCK_SIZE
                 py = GRID_OFFSET_Y + new_y * BLOCK_SIZE
                 
-                # Create semi-transparent surface
+                # Tạo surface bán trong suốt
                 surf = pygame.Surface((BLOCK_SIZE - 2, BLOCK_SIZE - 2))
                 surf.set_alpha(COLOR_GHOST_ALPHA)
                 surf.fill(color)
                 
-                # Draw ghost block
+                # Vẽ khối ma
                 self.screen.blit(surf, (px + 1, py + 1))
                 
-                # Draw ghost outline
+                # Vẽ viền ma
                 pygame.draw.rect(self.screen, (*color, COLOR_GHOST_ALPHA),
                                (px, py, BLOCK_SIZE, BLOCK_SIZE), 1)
 
     def draw_current_piece(self):
-        """Draw the currently falling piece"""
+        """Vẽ mảnh đang rơi hiện tại"""
         blocks = self.game_state.current_piece.get_blocks()
         color = self.game_state.current_piece.get_color()
         
         for x, y in blocks:
-            if y >= 0:  # Only draw blocks that are visible
+            if y >= 0:  # Chỉ vẽ các khối nhìn thấy được
                 px = GRID_OFFSET_X + x * BLOCK_SIZE
                 py = GRID_OFFSET_Y + y * BLOCK_SIZE
                 
-                # Draw filled block
+                # Vẽ khối đầy
                 pygame.draw.rect(self.screen, color,
                                (px + 1, py + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2))
-                # Draw white outline
+                # Vẽ viền trắng
                 pygame.draw.rect(self.screen, COLOR_WHITE,
                                (px, py, BLOCK_SIZE, BLOCK_SIZE), 2)
 
     def draw_ui(self):
         """
-        Draw the user interface panel.
+        Vẽ bảng giao diện người dùng.
         
-        Shows:
-        - Score
-        - High score
-        - Level
-        - Lines cleared
-        - Next piece preview
-        - Held piece preview
-        - Controls help
+        Hiển thị:
+        - Điểm số
+        - Điểm cao
+        - Cấp độ
+        - Số hàng đã xóa
+        - Xem trước mảnh tiếp theo
+        - Xem trước mảnh đã giữ
+        - Hướng dẫn điều khiển
         """
         ui_x = UI_OFFSET_X
         ui_y = UI_OFFSET_Y
         
-        # Score
-        text = self.font_small.render("SCORE", True, COLOR_TEXT)
+        # Điểm số
+        text = self.font_small.render("ĐIỂM", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -347,8 +347,8 @@ class TetrisGame:
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 50
         
-        # High Score
-        text = self.font_small.render("HIGH SCORE", True, COLOR_TEXT)
+        # Điểm cao
+        text = self.font_small.render("ĐIỂM CAO", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -356,8 +356,8 @@ class TetrisGame:
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 50
         
-        # Level
-        text = self.font_small.render("LEVEL", True, COLOR_TEXT)
+        # Cấp độ
+        text = self.font_small.render("CẤP ĐỘ", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -365,8 +365,8 @@ class TetrisGame:
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 50
         
-        # Lines
-        text = self.font_small.render("LINES", True, COLOR_TEXT)
+        # Số hàng
+        text = self.font_small.render("SỐ HÀNG", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -374,16 +374,16 @@ class TetrisGame:
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 50
         
-        # Next piece
-        text = self.font_small.render("NEXT", True, COLOR_TEXT)
+        # Mảnh tiếp theo
+        text = self.font_small.render("KẾ TIẾP", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
         self.draw_preview_piece(self.game_state.next_piece_type, ui_x, ui_y)
         ui_y += 120
         
-        # Hold piece
-        text = self.font_small.render("HOLD", True, COLOR_TEXT)
+        # Mảnh đã giữ
+        text = self.font_small.render("ĐÃ GIỮ", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -391,18 +391,18 @@ class TetrisGame:
             self.draw_preview_piece(self.game_state.held_piece_type, ui_x, ui_y)
         ui_y += 120
         
-        # Controls
-        text = self.font_tiny.render("CONTROLS", True, COLOR_TEXT)
+        # Điều khiển
+        text = self.font_tiny.render("ĐIỀU KHIỂN", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 25
         
         controls = [
-            "← → Move",
-            "↓ Soft Drop",
-            "Space Hard Drop",
-            "Z/X Rotate",
-            "C Hold",
-            "R Restart"
+            "← → Di chuyển",
+            "↓ Rơi chậm",
+            "Space Rơi nhanh",
+            "Z/X Xoay",
+            "C Giữ",
+            "R Khởi động lại"
         ]
         
         for control in controls:
@@ -412,11 +412,11 @@ class TetrisGame:
 
     def draw_preview_piece(self, piece_type, x, y):
         """
-        Draw a preview of a piece (for NEXT and HOLD displays).
+        Vẽ xem trước một mảnh (cho màn hình KẾ TIẾP và ĐÃ GIỮ).
         
         Args:
-            piece_type: The type of piece to preview
-            x, y: Position to draw the preview
+            piece_type: Loại mảnh cần xem trước
+            x, y: Vị trí để vẽ xem trước
         """
         shape = TetrominoType.get_shape(piece_type)
         color = TetrominoType.get_color(piece_type)
@@ -428,42 +428,42 @@ class TetrisGame:
                     px = x + j * preview_size
                     py = y + i * preview_size
                     
-                    # Draw block
+                    # Vẽ khối
                     pygame.draw.rect(self.screen, color,
                                    (px + 1, py + 1, preview_size - 2, preview_size - 2))
                     pygame.draw.rect(self.screen, COLOR_WHITE,
                                    (px, py, preview_size, preview_size), 1)
 
     def draw_game_over(self):
-        """Draw the game over overlay"""
-        # Draw semi-transparent overlay
+        """Vẽ lớp phủ game over"""
+        # Vẽ lớp phủ bán trong suốt
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         overlay.set_alpha(180)
         overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
         
-        # Draw "GAME OVER" text
+        # Vẽ chữ "GAME OVER"
         text = self.font_large.render("GAME OVER", True, COLOR_WHITE)
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
         self.screen.blit(text, text_rect)
         
-        # Draw "Press R to Restart" text
-        text = self.font_small.render("Press R to Restart", True, COLOR_TEXT)
+        # Vẽ chữ "Nhấn R để Khởi động lại"
+        text = self.font_small.render("Nhấn R để Khởi động lại", True, COLOR_TEXT)
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20))
         self.screen.blit(text, text_rect)
 
 
 def main():
     """
-    Entry point of the program.
+    Điểm khởi đầu của chương trình.
     
-    Creates the game and starts the main loop.
+    Tạo game và bắt đầu vòng lặp chính.
     """
     game = TetrisGame()
     game.run()
 
 
-# This ensures main() only runs when this file is executed directly
+# Điều này đảm bảo main() chỉ chạy khi file này được thực thi trực tiếp
 if __name__ == "__main__":
     main()
 

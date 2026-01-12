@@ -1,39 +1,26 @@
-"""
-Tetromino Classes and Piece Generation
-
-This file defines:
-- The 7 different tetromino shapes (I, O, T, S, Z, J, L)
-- Tetromino class with rotation logic
-- BagRandomizer for fair random piece generation (7-bag system)
-"""
-
 import random
 from config import *
 
 
 class TetrominoType:
-    """
-    Defines the 7 types of Tetris pieces.
-    Each piece has a unique shape and color.
-    """
-    I = 'I'  # Straight line piece
-    O = 'O'  # Square piece
-    T = 'T'  # T-shaped piece
-    S = 'S'  # S-shaped piece
-    Z = 'Z'  # Z-shaped piece
-    J = 'J'  # J-shaped piece
-    L = 'L'  # L-shaped piece
+    I = 'I'  # Mảnh đường thẳng
+    O = 'O'  # Mảnh hình vuông
+    T = 'T'  # Mảnh hình chữ T
+    S = 'S'  # Mảnh hình chữ S
+    Z = 'Z'  # Mảnh hình chữ Z
+    J = 'J'  # Mảnh hình chữ J
+    L = 'L'  # Mảnh hình chữ L
 
     @staticmethod
     def all_types():
-        """Returns a list of all 7 piece types"""
+        """Trả về danh sách tất cả 7 loại mảnh"""
         return [TetrominoType.I, TetrominoType.O, TetrominoType.T,
                 TetrominoType.S, TetrominoType.Z, TetrominoType.J,
                 TetrominoType.L]
 
     @staticmethod
     def get_color(piece_type):
-        """Returns the color for a given piece type"""
+        """Trả về màu sắc cho một loại mảnh nhất định"""
         colors = {
             TetrominoType.I: COLOR_I,
             TetrominoType.O: COLOR_O,
@@ -48,13 +35,13 @@ class TetrominoType:
     @staticmethod
     def get_shape(piece_type):
         """
-        Returns the shape matrix for a given piece type.
+        Trả về ma trận hình dạng cho một loại mảnh nhất định.
         
-        Each shape is a 4x4 grid where:
-        - 0 represents empty space
-        - 1 represents a filled block
+        Mỗi hình dạng là một lưới 4x4 trong đó:
+        - 0 đại diện cho không gian trống
+        - 1 đại diện cho một khối đầy
         
-        This makes it easy to rotate and check collisions.
+        Điều này giúp dễ dàng xoay và kiểm tra va chạm.
         """
         shapes = {
             TetrominoType.I: [
@@ -105,73 +92,73 @@ class TetrominoType:
 
 class Tetromino:
     """
-    Represents a single tetromino piece that can move and rotate.
+    Đại diện cho một mảnh tetromino đơn có thể di chuyển và xoay.
     
-    Attributes:
-        piece_type: The type of piece (I, O, T, S, Z, J, L)
-        shape: 4x4 grid representing the piece
-        x, y: Position on the game grid
-        rotation: Current rotation state (0, 1, 2, or 3)
+    Thuộc tính:
+        piece_type: Loại mảnh (I, O, T, S, Z, J, L)
+        shape: Lưới 4x4 đại diện cho mảnh
+        x, y: Vị trí trên lưới game
+        rotation: Trạng thái xoay hiện tại (0, 1, 2, hoặc 3)
     """
     
     def __init__(self, piece_type):
         """
-        Create a new tetromino piece.
+        Tạo một mảnh tetromino mới.
         
         Args:
-            piece_type: One of the TetrominoType constants
+            piece_type: Một trong các hằng số TetrominoType
         """
         self.piece_type = piece_type
         self.shape = TetrominoType.get_shape(piece_type)
         
-        # Start position: center top of grid
+        # Vị trí bắt đầu: giữa trên cùng của lưới
         self.x = GRID_WIDTH // 2 - 2
         self.y = 0
         self.rotation = 0
 
     def get_color(self):
-        """Returns the color of this piece"""
+        """Trả về màu sắc của mảnh này"""
         return TetrominoType.get_color(self.piece_type)
 
     def get_blocks(self):
         """
-        Returns a list of (x, y) coordinates for all filled blocks in the piece.
+        Trả về danh sách tọa độ (x, y) cho tất cả các khối đầy trong mảnh.
         
-        This is useful for:
-        - Drawing the piece
-        - Checking collisions
-        - Locking the piece into the grid
+        Hữu ích cho:
+        - Vẽ mảnh
+        - Kiểm tra va chạm
+        - Khóa mảnh vào lưới
         
         Returns:
-            List of (x, y) tuples representing block positions
+            Danh sách các tuple (x, y) đại diện cho vị trí khối
         """
         blocks = []
         for i in range(len(self.shape)):
             for j in range(len(self.shape[i])):
                 if self.shape[i][j] == 1:
-                    # Add piece position to get actual grid coordinates
+                    # Thêm vị trí mảnh để lấy tọa độ lưới thực tế
                     blocks.append((self.x + j, self.y + i))
         return blocks
 
     def rotate_clockwise(self):
         """
-        Rotate the piece 90 degrees clockwise.
+        Xoay mảnh 90 độ theo chiều kim đồng hồ.
         
-        The O piece doesn't rotate (it's a square).
+        Mảnh O không xoay (nó là hình vuông).
         
-        Rotation algorithm:
-        - Take the transpose of the matrix
-        - Reverse each row
+        Thuật toán xoay:
+        - Lấy chuyển vị của ma trận
+        - Đảo ngược mỗi hàng
         """
-        # O piece doesn't rotate
+        # Mảnh O không xoay
         if self.piece_type == TetrominoType.O:
             return
 
         n = len(self.shape)
-        # Create new rotated shape
+        # Tạo hình dạng đã xoay mới
         rotated = [[0 for _ in range(n)] for _ in range(n)]
         
-        # Rotate 90 degrees clockwise
+        # Xoay 90 độ theo chiều kim đồng hồ
         for i in range(n):
             for j in range(n):
                 rotated[j][n - 1 - i] = self.shape[i][j]
@@ -181,19 +168,19 @@ class Tetromino:
 
     def rotate_counterclockwise(self):
         """
-        Rotate the piece 90 degrees counter-clockwise.
+        Xoay mảnh 90 độ ngược chiều kim đồng hồ.
         
-        Similar to clockwise rotation but in the opposite direction.
+        Tương tự như xoay cùng chiều nhưng theo hướng ngược lại.
         """
-        # O piece doesn't rotate
+        # Mảnh O không xoay
         if self.piece_type == TetrominoType.O:
             return
 
         n = len(self.shape)
-        # Create new rotated shape
+        # Tạo hình dạng đã xoay mới
         rotated = [[0 for _ in range(n)] for _ in range(n)]
         
-        # Rotate 90 degrees counter-clockwise
+        # Xoay 90 độ ngược chiều kim đồng hồ
         for i in range(n):
             for j in range(n):
                 rotated[n - 1 - j][i] = self.shape[i][j]
@@ -203,10 +190,10 @@ class Tetromino:
 
     def copy(self):
         """
-        Create a copy of this piece.
+        Tạo một bản sao của mảnh này.
         
-        Used for testing rotations and movements without
-        affecting the original piece.
+        Được sử dụng để kiểm tra xoay và di chuyển mà không
+        ảnh hưởng đến mảnh gốc.
         """
         new_piece = Tetromino(self.piece_type)
         new_piece.shape = [row[:] for row in self.shape]
@@ -218,36 +205,36 @@ class Tetromino:
 
 class BagRandomizer:
     """
-    Implements the 7-bag randomization system.
+    Triển khai hệ thống ngẫu nhiên túi 7 mảnh.
     
-    This is the standard Tetris randomization method:
-    - Put all 7 pieces in a bag
-    - Shuffle the bag
-    - Draw pieces one by one
-    - When empty, refill and shuffle again
+    Đây là phương pháp ngẫu nhiên Tetris chuẩn:
+    - Đặt tất cả 7 mảnh vào một túi
+    - Xáo trộn túi
+    - Rút mảnh từng cái một
+    - Khi trống, đổ đầy và xáo trộn lại
     
-    This ensures fair distribution - you'll never go too long
-    without seeing a specific piece type.
+    Điều này đảm bảo phân phối công bằng - bạn sẽ không bao giờ phải đợi quá lâu
+    mà không thấy một loại mảnh cụ thể.
     """
     
     def __init__(self):
-        """Create a new bag randomizer with a full shuffled bag"""
+        """Tạo một bộ ngẫu nhiên túi mới với túi đầy đã xáo trộn"""
         self.bag = []
         self.refill_bag()
 
     def refill_bag(self):
-        """Fill the bag with all 7 piece types and shuffle"""
+        """Đổ đầy túi với tất cả 7 loại mảnh và xáo trộn"""
         self.bag = TetrominoType.all_types()
         random.shuffle(self.bag)
 
     def next(self):
         """
-        Get the next piece from the bag.
+        Lấy mảnh tiếp theo từ túi.
         
-        If the bag is empty, it automatically refills.
+        Nếu túi trống, nó tự động đổ đầy lại.
         
         Returns:
-            A TetrominoType constant
+            Một hằng số TetrominoType
         """
         if len(self.bag) == 0:
             self.refill_bag()
@@ -255,12 +242,12 @@ class BagRandomizer:
 
     def peek(self):
         """
-        Look at the next piece without removing it from the bag.
+        Xem mảnh tiếp theo mà không loại bỏ nó khỏi túi.
         
-        This is used to show the "NEXT" piece preview.
+        Được sử dụng để hiển thị xem trước mảnh "KẾ TIẾP".
         
         Returns:
-            A TetrominoType constant
+            Một hằng số TetrominoType
         """
         if len(self.bag) == 0:
             self.refill_bag()
