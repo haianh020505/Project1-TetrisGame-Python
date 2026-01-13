@@ -339,7 +339,7 @@ class TetrisGame:
         ui_y = UI_OFFSET_Y
         
         # Điểm số
-        text = self.font_small.render("ĐIỂM", True, COLOR_TEXT)
+        text = self.font_small.render("SCORE", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -348,7 +348,7 @@ class TetrisGame:
         ui_y += 50
         
         # Điểm cao
-        text = self.font_small.render("ĐIỂM CAO", True, COLOR_TEXT)
+        text = self.font_small.render("HIGH SCORE", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -357,7 +357,7 @@ class TetrisGame:
         ui_y += 50
         
         # Cấp độ
-        text = self.font_small.render("CẤP ĐỘ", True, COLOR_TEXT)
+        text = self.font_small.render("LEVEL", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -366,7 +366,7 @@ class TetrisGame:
         ui_y += 50
         
         # Số hàng
-        text = self.font_small.render("SỐ HÀNG", True, COLOR_TEXT)
+        text = self.font_small.render("LINES", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -375,7 +375,7 @@ class TetrisGame:
         ui_y += 50
         
         # Mảnh tiếp theo
-        text = self.font_small.render("KẾ TIẾP", True, COLOR_TEXT)
+        text = self.font_small.render("NEXT", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -383,7 +383,7 @@ class TetrisGame:
         ui_y += 120
         
         # Mảnh đã giữ
-        text = self.font_small.render("ĐÃ GIỮ", True, COLOR_TEXT)
+        text = self.font_small.render("HOLD", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 30
         
@@ -392,7 +392,7 @@ class TetrisGame:
         ui_y += 120
         
         # Điều khiển
-        text = self.font_tiny.render("ĐIỀU KHIỂN", True, COLOR_TEXT)
+        text = self.font_tiny.render("CONTROLS", True, COLOR_TEXT)
         self.screen.blit(text, (ui_x, ui_y))
         ui_y += 25
         
@@ -448,7 +448,7 @@ class TetrisGame:
         self.screen.blit(text, text_rect)
         
         # Vẽ chữ "Nhấn R để Khởi động lại"
-        text = self.font_small.render("Nhấn R để Khởi động lại", True, COLOR_TEXT)
+        text = self.font_small.render("PRESS R TO RESTART", True, COLOR_TEXT)
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20))
         self.screen.blit(text, text_rect)
 

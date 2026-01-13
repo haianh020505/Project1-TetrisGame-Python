@@ -165,7 +165,7 @@ class GameState:
             return
 
         # Thử wall kick (điều chỉnh vị trí nhỏ)
-        kicks = [(1, 0), (-1, 0), (0, -1), (1, -1), (-1, -1)]
+        kicks = [(1, 0), (-1, 0), (0, -1), (1, -1), (-1, -1),(-2,0),(2,0)]
         for dx, dy in kicks:
             test_piece.x = self.current_piece.x + dx
             test_piece.y = self.current_piece.y + dy
@@ -188,7 +188,7 @@ class GameState:
             return
 
         # Thử wall kick
-        kicks = [(1, 0), (-1, 0), (0, -1), (1, -1), (-1, -1)]
+        kicks = [(1, 0), (-1, 0), (0, -1), (1, -1), (-1, -1),(-2,0),(2,0)]
         for dx, dy in kicks:
             test_piece.x = self.current_piece.x + dx
             test_piece.y = self.current_piece.y + dy
